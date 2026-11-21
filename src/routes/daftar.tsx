@@ -45,7 +45,7 @@ function Daftar() {
   }
 
   return (
-    <main className="mx-auto min-h-dvh max-w-md px-5 py-6">
+    <main className="mx-auto min-h-full max-w-md px-5 py-6">
       {step !== "card" && <Link to="/" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground"><ArrowLeft className="size-4" /> Kembali</Link>}
       {step === "form" && (
         <form className="space-y-5" onSubmit={(e) => { e.preventDefault(); if (nama.trim().length >= 2 && tgl) setStep("char"); }}>

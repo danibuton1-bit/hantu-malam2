@@ -7,6 +7,8 @@ import { BATTERIES, CATCH_DIST, decideOutcome, EXIT, GAME_SECONDS, GHOST_SPAWN, 
 import { CharImg } from "./Art";
 import { Joystick } from "./Joystick";
 import { createScene } from "@/lib/scene3d";
+import { toContent } from "@/lib/orient";
+import { EMOTES, emoteIcon } from "@/lib/emotes";
 import { MuteButton } from "./MuteButton";
 import { Button } from "./ui/button";
 
@@ -26,6 +28,9 @@ export function Game({ code, me, players, startedAt, isHost, onBackToLobby, onLe
   const [outcome, setOutcome] = useState<"hunters" | "ghost" | null>(null);
   const [isTouch, setIsTouch] = useState(false);
   const shoutRef = useRef<() => void>(() => {});
+  const emoteRef = useRef<(e: string) => void>(() => {});
+  const [bubbles, setBubbles] = useState<{ k: number; nama: string; e: string }[]>([]);
+  const [emoteOpen, setEmoteOpen] = useState(false);
 
   const meP = players.find((p) => p.id === me)!;
   const amGhost = meP.role === "ghost";
@@ -55,7 +60,7 @@ export function Game({ code, me, players, startedAt, isHost, onBackToLobby, onLe
     const onClick = () => { if (!window.matchMedia("(pointer: coarse)").matches) void cv.requestPointerLock?.(); };
     let touchId: number | null = null, tx0 = 0, ty0 = 0;
     const onPD = (e: PointerEvent) => { if (e.pointerType === "mouse") return; touchId = e.pointerId; tx0 = e.clientX; ty0 = e.clientY; };
-    const onPM = (e: PointerEvent) => { if (e.pointerId !== touchId) return; look((e.clientX - tx0) * 1.4, (e.clientY - ty0) * 1.4); tx0 = e.clientX; ty0 = e.clientY; };
+    const onPM = (e: PointerEvent) => { if (e.pointerId !== touchId) return; const d = toContent(e.clientX - tx0, e.clientY - ty0); look(d.x * 1.4, d.y * 1.4); tx0 = e.clientX; ty0 = e.clientY; };
     const onPU = (e: PointerEvent) => { if (e.pointerId === touchId) touchId = null; };
     document.addEventListener("mousemove", onMouse); cv.addEventListener("click", onClick);
     cv.addEventListener("pointerdown", onPD); window.addEventListener("pointermove", onPM); window.addEventListener("pointerup", onPU);
@@ -86,9 +91,17 @@ export function Game({ code, me, players, startedAt, isHost, onBackToLobby, onLe
     });
     ch.on("broadcast", { event: "caught" }, ({ payload }) => setStatus((payload as { id: string }).id, "caught"));
     ch.on("broadcast", { event: "shout" }, ({ payload }) => { const l = live[(payload as { id: string }).id]; if (l) { l.shoutUntil = performance.now() + 2500; audio.shout(); } });
+    const showEmote = (id: string, e: string) => {
+      const k = Math.random(); const nama = id === me ? "Kamu" : players.find((p) => p.id === id)?.nama ?? "?";
+      setBubbles((b) => [...b.slice(-3), { k, nama, e }]);
+      setTimeout(() => setBubbles((b) => b.filter((x) => x.k !== k)), 2600);
+    };
+    ch.on("broadcast", { event: "emote" }, ({ payload }) => { const p = payload as { id: string; e: string }; showEmote(p.id, p.e); });
     ch.subscribe();
     const send = (event: string, payload: object) => void ch.send({ type: "broadcast", event, payload });
 
+    let emoteCd = 0;
+    emoteRef.current = (e: string) => { const n = performance.now(); if (n < emoteCd) return; emoteCd = n + 1200; showEmote(me, e); void ch.send({ type: "broadcast", event: "emote", payload: { id: me, e } }); };
     shoutRef.current = () => {
       if (meL.status !== "alive" || performance.now() < meL.shoutUntil) return;
       meL.shoutUntil = performance.now() + 2500; audio.shout(); send("shout", { id: me });
@@ -216,9 +229,18 @@ export function Game({ code, me, players, startedAt, isHost, onBackToLobby, onLe
       {hud.cd > 0 && <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center bg-void/50 text-center"><div className="font-horror text-8xl text-primary">{hud.cd}</div><p className="mt-3 px-6 text-foreground">{amGhost ? "KAMU HANTU ASAP. Tangkap semua pemburu!" : "KAMU PEMBURU. Cari 5 kunci dan kabur!"}</p></div>}
       {toast && <div className="absolute left-1/2 top-20 -translate-x-1/2 rounded-lg border border-gold bg-card/90 px-4 py-2 text-center text-sm font-bold text-gold">{toast}</div>}
       {spectating && !outcome && <div className="absolute inset-x-0 top-28 text-center font-horror text-2xl text-foreground">KAMU JADI PENONTON</div>}
+      <div className="pointer-events-none absolute right-24 top-24 flex flex-col items-end gap-1">
+        {bubbles.map((b) => <div key={b.k} className="animate-in fade-in slide-in-from-right rounded-full bg-card/85 px-3 py-1 text-sm"><b>{b.nama}</b> <span className="text-2xl">{emoteIcon(b.e)}</span></div>)}
+      </div>
+      <div className="absolute bottom-32 right-6 flex flex-col items-end gap-2">
+        {emoteOpen && <div className="grid grid-cols-3 gap-1 rounded-xl bg-card/85 p-1.5">
+          {EMOTES.map((e) => <button key={e.id} onPointerDown={() => { emoteRef.current(e.id); setEmoteOpen(false); }} className="size-11 rounded-lg bg-muted text-2xl">{e.icon}</button>)}
+        </div>}
+        <button onPointerDown={() => setEmoteOpen((o) => !o)} className="flex size-12 items-center justify-center rounded-full border border-border bg-card/80 text-2xl" aria-label="Emote">😀</button>
+      </div>
       {/* controls */}
       {isTouch && <div className="absolute bottom-6 left-6"><Joystick vec={joy} /></div>}
-      {isTouch && <div className="pointer-events-none absolute bottom-32 right-4 text-xs text-muted-foreground">Geser layar untuk melihat</div>}
+      {isTouch && <div className="pointer-events-none absolute bottom-2 right-32 text-xs text-muted-foreground">Geser layar untuk melihat</div>}
       {!amGhost && !spectating && (
         <button onPointerDown={() => shoutRef.current()} className="absolute bottom-8 right-6 flex size-20 flex-col items-center justify-center rounded-full border-2 border-primary bg-blood/80 text-xs font-bold text-primary-foreground glow-blood">
           <Megaphone className="size-6" />TOLONG!

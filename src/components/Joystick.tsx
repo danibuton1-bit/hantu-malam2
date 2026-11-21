@@ -1,3 +1,4 @@
+import { toContent } from "@/lib/orient";
 import { useRef, useState, type MutableRefObject } from "react";
 
 export function Joystick({ vec }: { vec: MutableRefObject<{ x: number; y: number }> }) {
@@ -7,7 +8,8 @@ export function Joystick({ vec }: { vec: MutableRefObject<{ x: number; y: number
   const R = 50;
   function update(cx: number, cy: number) {
     const b = base.current!.getBoundingClientRect();
-    let dx = cx - (b.left + b.width / 2), dy = cy - (b.top + b.height / 2);
+    const c = toContent(cx - (b.left + b.width / 2), cy - (b.top + b.height / 2));
+    let dx = c.x, dy = c.y;
     const d = Math.hypot(dx, dy);
     if (d > R) { dx = (dx / d) * R; dy = (dy / d) * R; }
     setKnob({ x: dx, y: dy });

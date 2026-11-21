@@ -13,7 +13,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppStateProvider } from "@/components/AppState";
-import { InviteToast } from "@/components/InviteToast";
+import { tryLockLandscape } from "@/lib/orient";
 
 function NotFoundComponent() {
   return (
@@ -129,8 +129,9 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <AppStateProvider>
-        <InviteToast />
-        <Outlet />
+        <div className="landscape-wrap" onPointerDown={() => void tryLockLandscape()}>
+          <Outlet />
+        </div>
       </AppStateProvider>
     </QueryClientProvider>
   );

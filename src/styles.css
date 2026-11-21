@@ -135,3 +135,14 @@ body { font-family: var(--font-sans); background: radial-gradient(ellipse at top
 .animate-flicker { animation: flicker 3s infinite; }
 @keyframes floaty { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
 .animate-floaty { animation: floaty 3s ease-in-out infinite; }
+
+/* Auto-rotate 90deg: phones held upright still see the game in landscape. */
+.landscape-wrap { position: fixed; inset: 0; overflow: auto; }
+@media (orientation: portrait) {
+  .landscape-wrap {
+    inset: auto; top: 0; left: 0;
+    width: 100dvh; height: 100dvw;
+    transform-origin: top left;
+    transform: rotate(90deg) translateY(-100%);
+  }
+}

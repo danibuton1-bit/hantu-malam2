@@ -27,7 +27,7 @@ function Landing() {
 
   if (splash || !ready || account) {
     return (
-      <main className="flex min-h-dvh flex-col items-center justify-center gap-6 px-6">
+      <main className="flex min-h-full flex-col items-center justify-center gap-6 px-6">
         <Logo className="w-full max-w-md animate-flicker rounded-xl" />
         <div className="h-1.5 w-48 overflow-hidden rounded bg-muted"><div className="h-full w-1/2 animate-pulse bg-blood" /></div>
         <p className="text-sm text-muted-foreground">Memanggil arwah...</p>
@@ -35,7 +35,7 @@ function Landing() {
     );
   }
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-6 px-6 py-10">
+    <main className="mx-auto flex min-h-full max-w-md flex-col items-center justify-center gap-6 px-6 py-10">
       <Logo className="w-full rounded-xl glow-blood" />
       <h1 className="font-horror text-drip text-center text-4xl text-primary">HANTU MALAM</h1>
       <p className="-mt-4 text-center text-sm text-muted-foreground">Tanpa email. Tanpa password. Cukup ID Card.</p>

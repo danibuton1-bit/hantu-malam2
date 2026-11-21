@@ -51,7 +51,7 @@ function Login() {
   }
 
   return (
-    <main className="mx-auto min-h-dvh max-w-md space-y-6 px-5 py-6">
+    <main className="mx-auto min-h-full max-w-md space-y-6 px-5 py-6">
       <Link to="/" className="inline-flex items-center gap-1 text-sm text-muted-foreground"><ArrowLeft className="size-4" /> Kembali</Link>
       <h1 className="font-horror text-drip text-4xl text-primary">LOGIN ID CARD</h1>
       <label className="flex h-32 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-accent bg-card text-center">

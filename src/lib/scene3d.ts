@@ -100,14 +100,28 @@ export function createScene(canvas: HTMLCanvasElement, opts: { me: CharId | "gho
     const sleeve = new THREE.MeshStandardMaterial({ color: look.top, roughness: 0.9 });
     const skin = new THREE.MeshStandardMaterial({ color: 0xd9a77e, roughness: 0.7 });
     const metal = new THREE.MeshStandardMaterial({ color: look.torch, metalness: 0.7, roughness: 0.35 });
-    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 0.5), sleeve); arm.position.set(0.28, -0.32, -0.35); arm.rotation.x = 0.15;
-    const hand = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.1, 0.12), skin); hand.position.set(0.28, -0.29, -0.62);
-    const torch = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.03, 0.3, 12), metal); torch.rotation.x = Math.PI / 2; torch.position.set(0.28, -0.24, -0.7);
-    const head = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.04, 0.08, 12), metal); head.rotation.x = Math.PI / 2; head.position.set(0.28, -0.24, -0.88);
-    const lens = new THREE.Mesh(new THREE.CircleGeometry(0.045, 16), new THREE.MeshBasicMaterial({ color: 0xfff6d8 })); lens.position.set(0.28, -0.24, -0.921);
-    const left = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 0.45), sleeve); left.position.set(-0.34, -0.4, -0.3); left.rotation.set(0.25, 0.1, 0);
-    const lhand = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.12), skin); lhand.position.set(-0.36, -0.36, -0.55);
-    vm.add(arm, hand, torch, head, lens, left, lhand);
+    // forearm (rounded sleeve) + cuff + palm + 4 curled fingers + thumb wrapped round the torch
+    const cap = (r: number, l: number, m: THREE.Material) => new THREE.Mesh(new THREE.CapsuleGeometry(r, l, 6, 12), m);
+    const buildHand = (side: 1 | -1, holding: boolean) => {
+      const g = new THREE.Group();
+      const fore = cap(0.055, 0.36, sleeve); fore.rotation.x = Math.PI / 2; fore.position.set(0, 0, 0.12);
+      const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.058, 0.058, 0.04, 14), skin); cuff.rotation.x = Math.PI / 2; cuff.position.set(0, 0, -0.08);
+      const palm = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.045, 0.09), skin); palm.position.set(0, 0, -0.14);
+      g.add(fore, cuff, palm);
+      for (let i = 0; i < 4; i++) {
+        const f = cap(0.012, holding ? 0.03 : 0.05, skin);
+        f.position.set(-0.03 + i * 0.02, holding ? 0.025 : -0.005, holding ? -0.19 : -0.205);
+        f.rotation.x = holding ? -0.2 : Math.PI / 2 + 0.25; g.add(f);
+      }
+      const th = cap(0.013, 0.035, skin); th.position.set(side * -0.05, 0.02, -0.15); th.rotation.set(0.6, 0, side * 0.9); g.add(th);
+      return g;
+    };
+    const rightH = buildHand(1, true); rightH.position.set(0.28, -0.3, -0.42); rightH.rotation.x = 0.12;
+    const leftH = buildHand(-1, false); leftH.position.set(-0.33, -0.38, -0.38); leftH.rotation.set(0.25, 0.15, 0.1);
+    const torch = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.26, 14), metal); torch.rotation.x = Math.PI / 2; torch.position.set(0.28, -0.27, -0.66);
+    const head = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.035, 0.08, 14), metal); head.rotation.x = Math.PI / 2; head.position.set(0.28, -0.27, -0.82);
+    const lens = new THREE.Mesh(new THREE.CircleGeometry(0.042, 16), new THREE.MeshBasicMaterial({ color: 0xfff6d8 })); lens.position.set(0.28, -0.27, -0.861);
+    vm.add(rightH, leftH, torch, head, lens);
     vm.userData["lens"] = lens;
   } else {
     // ghost: smoky dark claws
